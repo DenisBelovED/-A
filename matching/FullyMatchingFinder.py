@@ -15,11 +15,10 @@ def generate_adjency_matrix():
                 break
         header = adj_array[:int(len_x)+1]
         bias_adj_ranges = [header[i+1]-header[i] for i in range(len(header)-1)]
-        adj_mat = [[0 for g in range(int(len_y))] for i in range(int(len_x))]
+        adj_mat = {}
         for head_index in range(len(header) - 1):
-            for bias in range(bias_adj_ranges[head_index]):
-                adj_mat[head_index][adj_array[header[head_index]-1+bias]-1] = -1
-        return adj_mat
+            adj_mat[head_index] = [adj_array[header[head_index] - 1 + bias] - 1 for bias in range(bias_adj_ranges[head_index])]
+        return adj_mat, int(len_y)
 
 
 def write_result(lst):
@@ -28,13 +27,13 @@ def write_result(lst):
 
 def find_matching(adj_mat):
     result_vector = [-1 for i in range(len(adj_mat))]
-    for i in range(len(adj_mat)):
-        result_vector, adj_mat = finder(result_vector, adj_mat, i)
     return result_vector
 
 
 def main():
-    adj_mat: list[list] = generate_adjency_matrix()
+    adj_mat, len_y = generate_adjency_matrix()
+    x_dict = dict.fromkeys(adj_mat.keys(), -1)
+    y_dict = {i: -1 for i in range(len_y)}
     if adj_mat:
         write_result(find_matching(adj_mat))
 
