@@ -26,8 +26,47 @@ def write_result(lst):
     print(lst)
 
 
+def pair_builder(result_vector, adj_mat, i):
+    for v in range(len(adj_mat[i])):
+        if adj_mat[i][v] == 1:
+            for g in range(len(result_vector)):
+                if result_vector[g] == v:
+                    return g, v
+    return None, None
+
+
+def finder(result_vector, adj_mat, i):
+    if result_vector[i] != -1:
+        return result_vector, adj_mat
+
+    for v in range(len(adj_mat[i])):
+        if adj_mat[i][v] == -1:
+            adj_mat[i][v] = 1
+            result_vector[i] = v
+            for e in range(len(adj_mat)):
+                if adj_mat[e][v] == -1:
+                    adj_mat[e][v] = 1
+            return result_vector, adj_mat
+
+    m_extended_chain = [i]
+    ind = i
+    while True:
+        g, v = pair_builder(result_vector, adj_mat, ind)
+        if g and v:
+            m_extended_chain.append(v)
+            m_extended_chain.append(g)
+            ind = g
+        else:
+            break
+    return m_extended_chain
+
+
+
 def find_matching(adj_mat):
-    return adj_mat
+    result_vector = [-1 for i in range(len(adj_mat))]
+    for i in range(len(adj_mat)):
+        result_vector, adj_mat = finder(result_vector, adj_mat, i)
+    return result_vector
 
 
 def main():
