@@ -1,3 +1,7 @@
+mt_chain = []
+used = []
+
+
 def generate_adjency_matrix():
     with open(r'in.txt', 'r') as file:
         len_x, len_y = next(file).split(' ')
@@ -19,58 +23,48 @@ def generate_adjency_matrix():
         bias_adj_ranges = [header[i + 1] - header[i] for i in range(len(header) - 1)]
         adj_mat = [[0 for j in range(len_y)] for i in range(len_x)]
         for head_index in range(len(header) - 1):
-            for bias in range(bias_adj_ranges[head_index]):
-                adj_mat[head_index][adj_array[header[head_index] - 1 + bias] - 1] = 1
+            adj_mat[head_index] = [adj_array[header[head_index] - 1 + bias] - 1 for bias in range(bias_adj_ranges[head_index])]
         return adj_mat, len_y
 
 
 def write_result(lst):
-    print(lst)
+    with open('out.txt', 'w') as file:
+        file.write(lst)
 
 
-# если есть незанятая вершина из Y, то вернёт её индекс, иначе вернёт -1
-def select_free_vertex(adj_mat, x_i, res):
-    for y_i in range(len(adj_mat[x_i])):
-        if adj_mat[x_i][y_i] == 1:
-            if not (y_i in res):
-                return y_i
-    return -1
+def kuhn(adj_mat, x):
+    if used[x]:
+        return False
+    used[x] = True
+    for y in adj_mat[x]:
+        if (mt_chain[y] == -1) or (kuhn(adj_mat, mt_chain[y])):
+            mt_chain[y] = x
+            return True
+    return False
 
 
-def create_mt(adj_mat, res, x_i):
-    y_i = adj_mat[x_i].index(1)  # возьмём первую попавшуюся вершину y_i
-    x_j = res.index(y_i)  # будем смотреть, какой х_j с ней связан
-
-
-# метод делает проверку для x, существует ли свободная вершина в Y
-# если да, то result[x] = y
-# иначе начинает строить увеличивающуюся M-цепь
-def dfs_x(adj_mat, temp_res, x_i):
-    if temp_res[x_i] == -1:  # проверяем, есть ли паросочетание
-        y_i = select_free_vertex(adj_mat, x_i, temp_res)  # выбираем свободный y
-        if y_i == -1:
-            # свободного y нет, строим увеличивающуюся M-цепь
-            mt_chain = []
-        else:
-            # свободный y есть, заносим его в ответ, и возвращаем изменённый массив паросочетаний
-            temp_res[x_i] = y_i
-            return temp_res
-    else:
-        # паросочетание есть, ничего не изменяем
-        return temp_res
-
-
-def find_matching(adj_mat):
-    temp_res = [-1 for i in range(len(adj_mat))]
+def find_matching(adj_mat, len_y):
+    global used
+    global mt_chain
+    mt_chain = [-1 for i in range(len_y)]
     for i in range(len(adj_mat)):
-        temp_res = dfs_x(adj_mat, temp_res, i)
-    return temp_res
+        used = [False for i in range(len(adj_mat))]
+        kuhn(adj_mat, i)
+    if not (-1 in mt_chain):
+        return 'Y\n' + ' '.join([str(e + 1) for e in mt_chain])
+    else:
+        return 'N\n' + str(mt_chain.index(-1) + 1)
 
 
 def main():
-    adj_mat, len_y = generate_adjency_matrix()
+    adj_mat = None
+    try:
+        adj_mat, len_y = generate_adjency_matrix()
+    except:
+        write_result('N\n1')
+        adj_mat = None
     if adj_mat:
-        write_result(find_matching(adj_mat))
+        write_result(find_matching(adj_mat, len_y))
 
 
 if __name__ == '__main__':
